@@ -1,16 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+// Importe os métodos de autenticação do Firebase
+import { auth } from "../firebaseConfig"; // Verifique se o caminho está correto
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 
-// Simulação de "banco de dados" de usuários em localStorage (persistente no navegador)
-function getUsuarios() {
-  const data = localStorage.getItem("usuarios_sr");
-  if (data) return JSON.parse(data);
-  // Usuário padrão: admin
-  return [{ usuario: "jandson", senha: "sr2025", tipo: "admin" }];
-}
-function saveUsuarios(lista) {
-  localStorage.setItem("usuarios_sr", JSON.stringify(lista));
-}
-
+// Função para criar o fundo de estrelas (mantida do seu código original)
 function createSubtleStars() {
   if (document.getElementById('stars')) return;
   const starsContainer = document.createElement('div');
@@ -30,7 +26,7 @@ function createSubtleStars() {
   document.body.appendChild(starsContainer);
 }
 
-// CSS igual antes, pode copiar do exemplo anterior ou manter junto
+// Estilos CSS em JS (mantidos do seu código original)
 const styleTag = `
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,7 +35,6 @@ body {
 }
 .subtle-stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3; z-index: 0;}
 .star { position: absolute; background: rgba(255,255,255,0.6); border-radius: 50%; animation: subtle-twinkle 4s infinite ease-in-out;}
-@keyframes subtle-twinkle { 0%,100%{opacity:0.3;} 50%{opacity:0.8;} }
 .login-container { background: rgba(255,255,255,0.97);backdrop-filter: blur(18px); border-radius: 16px; padding: 40px 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 12px 24px rgba(0,0,0,0.13), 0 1px 0 rgba(255,255,255,0.17); border: 1px solid rgba(255,255,255,0.26); margin: auto; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;}
 .logo { width:120px;height:auto;margin-bottom:22px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.11)); }
 .system-title { color:#2c3e50;font-size:21px;font-weight:300;margin-bottom:6px;letter-spacing:-0.5px;}
@@ -53,7 +48,7 @@ body {
 .login-button:hover {background:linear-gradient(135deg,#2980b9 0%,#1f5f8b 100%);transform:translateY(-1px);box-shadow:0 4px 12px rgba(52,152,219,0.15);}
 .login-button:active {transform:translateY(0);}
 .footer-links {margin-top:20px;display:flex;justify-content:space-between;align-items:center;width:100%;}
-.footer-link {color:#7f8c8d;text-decoration:none;font-size:13px;transition:color 0.3s ease;}
+.footer-link {color:#7f8c8d;text-decoration:none;font-size:13px;transition:color 0.3s ease; cursor: pointer;}
 .footer-link:hover {color:#3498db;}
 .security-badge {margin-top:12px;padding:10px;background:rgba(46,204,113,0.08);border-radius:6px;border-left:3px solid #2ecc71;}
 .security-text {color:#27ae60;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px;}
@@ -67,18 +62,14 @@ body {
 `;
 
 export default function Login({ onLogin }) {
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
-  const [usuarios, setUsuarios] = useState(getUsuarios());
-  const [show2fa, setShow2fa] = useState(false);
-  const [codigo2fa, setCodigo2fa] = useState("");
-  const [input2fa, setInput2fa] = useState("");
-  const [adminMode, setAdminMode] = useState(false);
-  const [novoUser, setNovoUser] = useState({ usuario: "", senha: "", tipo: "user" });
-  const [msg, setMsg] = useState("");
+  const [mensagem, setMensagem] = useState(""); // Para mensagens de sucesso (ex: recuperação de senha)
+  const [carregando, setCarregando] = useState(false);
 
-  React.useEffect(() => {
+  // Efeito para injetar os estilos e o fundo de estrelas na página
+  useEffect(() => {
     if (!document.getElementById("login-style")) {
       const style = document.createElement("style");
       style.id = "login-style";
@@ -86,205 +77,82 @@ export default function Login({ onLogin }) {
       document.head.appendChild(style);
     }
     createSubtleStars();
+    // Função de limpeza para remover as estrelas quando o componente for desmontado
     return () => {
-      if (document.getElementById('stars')) {
-        document.getElementById('stars').remove();
+      const stars = document.getElementById('stars');
+      if (stars) {
+        stars.remove();
       }
     };
   }, []);
 
-  function gerarCodigo2fa() {
-    return (Math.floor(100000 + Math.random() * 900000)).toString(); // 6 dígitos
-  }
-
-  // Validação de login
-  const handleSubmit = (e) => {
+  // Função para lidar com o login via Firebase
+  const handleLogin = (e) => {
     e.preventDefault();
-    setErro(""); setMsg("");
-    const u = usuarios.find(
-      (u) => u.usuario === usuario.trim() && u.senha === senha.trim()
-    );
-    if (!usuario.trim() || !senha.trim()) {
-      setErro("Preencha usuário e senha.");
+    setErro("");
+    setMensagem("");
+
+    if (!email || !senha) {
+      setErro("Por favor, preencha o e-mail e a senha.");
       return;
     }
-    if (!u) {
-      setErro("Usuário ou senha inválidos!");
+
+    setCarregando(true);
+    signInWithEmailAndPassword(auth, email, senha)
+      .then((userCredential) => {
+        // Sucesso! Chama a função onLogin passada pelo componente pai
+        onLogin(userCredential.user);
+      })
+      .catch((error) => {
+        // Trata os erros mais comuns do Firebase
+        switch (error.code) {
+          case "auth/user-not-found":
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            setErro("E-mail ou senha inválidos.");
+            break;
+          case "auth/invalid-email":
+            setErro("O formato do e-mail é inválido.");
+            break;
+          default:
+            setErro("Ocorreu um erro ao tentar fazer login.");
+            break;
+        }
+      })
+      .finally(() => {
+        setCarregando(false);
+      });
+  };
+
+  // Função para lidar com a recuperação de senha via Firebase
+  const handleRecuperarSenha = () => {
+    setErro("");
+    setMensagem("");
+
+    if (!email) {
+      setErro("Por favor, informe seu e-mail para recuperar a senha.");
       return;
     }
-    // 2FA simulado (mostra na tela para usuário)
-    const cod = gerarCodigo2fa();
-    setCodigo2fa(cod);
-    setShow2fa(true);
-    setTimeout(() => {
-      alert("Seu código de autenticação é: " + cod + "\n\n(Na versão real será enviado por SMS ou e-mail.)");
-    }, 300); // Mostra o código para simulação
-    // Se for admin, já ativa adminMode depois
-    if (u.tipo === "admin") setAdminMode(true);
-    else setAdminMode(false);
+
+    setCarregando(true);
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        setMensagem("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      })
+      .catch((error) => {
+        if (error.code === "auth/user-not-found") {
+          setErro("Nenhum usuário encontrado com este e-mail.");
+        } else {
+          setErro("Ocorreu um erro ao tentar enviar o e-mail de recuperação.");
+        }
+      })
+      .finally(() => {
+        setCarregando(false);
+      });
   };
 
-  const handleSubmit2fa = (e) => {
-    e.preventDefault();
-    setErro(""); setMsg("");
-    if (input2fa.trim() === codigo2fa) {
-      setShow2fa(false);
-      setCodigo2fa("");
-      setInput2fa("");
-      // Retorna o usuário logado ao app principal (pode passar permissões se quiser)
-      onLogin(usuario);
-    } else {
-      setErro("Código de autenticação inválido.");
-    }
-  };
-
-  // ADMIN: Cadastrar novo usuário
-  const handleNovoUser = (e) => {
-    e.preventDefault();
-    setMsg(""); setErro("");
-    if (!novoUser.usuario.trim() || !novoUser.senha.trim()) {
-      setErro("Preencha todos os campos do novo usuário.");
-      return;
-    }
-    if (usuarios.find(u => u.usuario === novoUser.usuario.trim())) {
-      setErro("Usuário já existe!");
-      return;
-    }
-    const newList = [
-      ...usuarios,
-      {
-        usuario: novoUser.usuario.trim(),
-        senha: novoUser.senha.trim(),
-        tipo: novoUser.tipo,
-      },
-    ];
-    setUsuarios(newList);
-    saveUsuarios(newList);
-    setNovoUser({ usuario: "", senha: "", tipo: "user" });
-    setMsg("Usuário cadastrado com sucesso!");
-  };
-
-  // ADMIN: Excluir usuário (exceto admin)
-  const handleDeleteUser = (u) => {
-    if (u.tipo === "admin") return;
-    const list = usuarios.filter(x => x.usuario !== u.usuario);
-    setUsuarios(list);
-    saveUsuarios(list);
-    setMsg("Usuário removido.");
-  };
-
-  // TELA 2FA
-  if (show2fa) {
-    return (
-      <div className="login-bg" style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center"
-      }}>
-        <div className="login-container">
-          <img src="/logo_sao_roque.png" alt="Rede São Roque" className="logo" />
-          <h2 className="system-title">Autenticação em 2 fatores</h2>
-          <p className="subtitle">Digite o código de 6 dígitos enviado para seu dispositivo<br />
-            <span style={{ color: "#aaa", fontSize: 12 }}>(Para testar, código: <b>{codigo2fa}</b>)</span>
-          </p>
-          <form onSubmit={handleSubmit2fa} autoComplete="off">
-            <input
-              type="text"
-              className="form-input"
-              maxLength={6}
-              style={{ textAlign: "center", fontSize: 22, letterSpacing: 8, margin: "18px 0" }}
-              placeholder="000000"
-              value={input2fa}
-              onChange={e => setInput2fa(e.target.value.replace(/\D/g, ""))}
-              autoFocus
-            />
-            {erro && <div style={{ color: "#e74c3c", marginBottom: 10 }}>{erro}</div>}
-            <button type="submit" className="login-button">Validar código</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // ADMIN: tela de cadastro de usuários
-  if (adminMode) {
-    return (
-      <div className="login-bg" style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center"
-      }}>
-        <div className="login-container">
-          <img src="/logo_sao_roque.png" alt="Rede São Roque" className="logo" />
-          <h2 className="system-title">Administração de Usuários</h2>
-          <form onSubmit={handleNovoUser} autoComplete="off">
-            <div className="form-group">
-              <label className="form-label">Nome do usuário</label>
-              <input
-                className="form-input"
-                placeholder="Novo usuário"
-                value={novoUser.usuario}
-                onChange={e => setNovoUser(s => ({ ...s, usuario: e.target.value }))}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Senha</label>
-              <input
-                className="form-input"
-                placeholder="Senha"
-                type="password"
-                value={novoUser.senha}
-                onChange={e => setNovoUser(s => ({ ...s, senha: e.target.value }))}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Permissão</label>
-              <select
-                className="form-input"
-                value={novoUser.tipo}
-                onChange={e => setNovoUser(s => ({ ...s, tipo: e.target.value }))}
-              >
-                <option value="user">Usuário comum</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
-            <button className="login-button" type="submit">Cadastrar usuário</button>
-          </form>
-          {msg && <div style={{ color: "#27ae60", marginTop: 10 }}>{msg}</div>}
-          {erro && <div style={{ color: "#e74c3c", marginTop: 10 }}>{erro}</div>}
-
-          <div style={{ marginTop: 24 }}>
-            <h4 style={{ margin: "6px 0 10px", color: "#34495e" }}>Usuários cadastrados</h4>
-            {usuarios.length < 2 && <div style={{ fontSize: 13, color: "#888" }}>Nenhum usuário além do admin.</div>}
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              {usuarios.map((u, idx) => (
-                <li key={idx} style={{ marginBottom: 10, fontSize: 15, color: "#34495e", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>
-                    <b>{u.usuario}</b> ({u.tipo === "admin" ? "Admin" : "Usuário"})
-                  </span>
-                  {u.tipo !== "admin" && (
-                    <button onClick={() => handleDeleteUser(u)} style={{
-                      fontSize: 12, padding: "3px 11px", borderRadius: 6, border: "none",
-                      background: "#e74c3c", color: "#fff", cursor: "pointer"
-                    }}>Excluir</button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <button
-            className="login-button"
-            style={{ background: "#b58944", marginTop: 22 }}
-            onClick={() => setAdminMode(false)}
-          >
-            Voltar para login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // TELA LOGIN padrão
   return (
-    <div className="login-bg" style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
+    <div className="login-bg">
       <div className="login-container">
         <img
           src="/logo_sao_roque.png"
@@ -293,17 +161,19 @@ export default function Login({ onLogin }) {
         />
         <h1 className="system-title">Portal Corporativo</h1>
         <p className="subtitle">Acesso seguro ao sistema</p>
-        <form onSubmit={handleSubmit} autoComplete="off" style={{ width: '100%' }}>
+        
+        <form onSubmit={handleLogin} autoComplete="off" style={{ width: '100%' }}>
           <div className="form-group">
-            <label className="form-label" htmlFor="usuario">Usuário</label>
+            <label className="form-label" htmlFor="email">E-mail</label>
             <input
-              id="usuario"
-              type="text"
+              id="email"
+              type="email"
               className="form-input"
-              placeholder="Digite seu nome de usuário"
-              value={usuario}
-              onChange={e => setUsuario(e.target.value)}
+              placeholder="Digite seu e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoFocus
+              disabled={carregando}
             />
           </div>
           <div className="form-group">
@@ -314,20 +184,25 @@ export default function Login({ onLogin }) {
               className="form-input"
               placeholder="Digite sua senha"
               value={senha}
-              onChange={e => setSenha(e.target.value)}
+              onChange={(e) => setSenha(e.target.value)}
+              disabled={carregando}
             />
           </div>
-          {erro && (
-            <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: 15 }}>{erro}</div>
-          )}
-          <button type="submit" className="login-button">
-            Acessar Sistema
+
+          {/* Exibe mensagens de erro ou sucesso */}
+          {erro && <div style={{ color: "#e74c3c", marginBottom: 12, fontSize: 15 }}>{erro}</div>}
+          {mensagem && <div style={{ color: "#27ae60", marginBottom: 12, fontSize: 15 }}>{mensagem}</div>}
+
+          <button type="submit" className="login-button" disabled={carregando}>
+            {carregando ? "Acessando..." : "Acessar Sistema"}
           </button>
         </form>
+
         <div className="footer-links">
-          <a href="#" className="footer-link">Esqueci minha senha</a>
+          <a onClick={handleRecuperarSenha} className="footer-link">Esqueci minha senha</a>
           <a href="#" className="footer-link">Suporte técnico</a>
         </div>
+
         <div className="security-badge">
           <div className="security-text">
             <svg className="security-icon" viewBox="0 0 24 24">
