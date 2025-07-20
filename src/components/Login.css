@@ -1,0 +1,350 @@
+/* Login.css - Mobile First Design */
+
+/* Reset e configurações base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Container principal - Mobile First */
+.login-page {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px;
+}
+
+/* Estrelas de fundo */
+.subtle-stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: subtle-twinkle 4s infinite ease-in-out;
+}
+
+@keyframes subtle-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Container do login */
+.login-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 10;
+}
+
+/* Logo */
+.logo-container {
+  margin-bottom: 30px;
+}
+
+.logo {
+  width: 180px;
+  height: auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* Cabeçalho */
+.header-section {
+  margin-bottom: 35px;
+}
+
+.system-title {
+  color: #2c3e50;
+  font-size: 24px;
+  font-weight: 300;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+/* Formulário */
+.login-form {
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  color: #34495e;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #e8eaed;
+  border-radius: 8px;
+  color: #2c3e50;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3498db;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-input::placeholder {
+  color: #95a5a6;
+}
+
+.form-input.error {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+/* Mensagens de erro */
+.error-message {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+.general-error {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border-left: 3px solid #e74c3c;
+}
+
+/* Botão de login */
+.login-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9 0%, #1f5f8b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-button.loading {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
+/* Spinner de loading */
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Links do rodapé */
+.footer-links {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.footer-link {
+  color: #7f8c8d;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #3498db;
+}
+
+/* Badge de segurança */
+.security-badge {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #2ecc71;
+}
+
+.security-text {
+  color: #27ae60;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.security-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Responsividade para tablets */
+@media (min-width: 768px) {
+  .login-container {
+    padding: 50px 40px;
+    max-width: 420px;
+  }
+  
+  .logo {
+    width: 220px;
+  }
+  
+  .system-title {
+    font-size: 28px;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+  }
+  
+  .form-input {
+    padding: 16px 20px;
+  }
+  
+  .login-button {
+    padding: 18px;
+  }
+  
+  .footer-links {
+    flex-wrap: nowrap;
+  }
+  
+  .footer-link {
+    font-size: 14px;
+  }
+}
+
+/* Responsividade para desktop */
+@media (min-width: 1024px) {
+  .login-page {
+    padding: 40px;
+  }
+  
+  .login-container {
+    max-width: 450px;
+  }
+}
+
+/* Melhorias para dispositivos com toque */
+@media (hover: none) and (pointer: coarse) {
+  .form-input {
+    font-size: 16px; /* Evita zoom no iOS */
+  }
+  
+  .login-button {
+    min-height: 48px; /* Área de toque adequada */
+  }
+  
+  .footer-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Modo escuro (opcional) */
+@media (prefers-color-scheme: dark) {
+  .login-container {
+    background: rgba(44, 62, 80, 0.95);
+    color: #ecf0f1;
+  }
+  
+  .system-title {
+    color: #ecf0f1;
+  }
+  
+  .subtitle {
+    color: #bdc3c7;
+  }
+  
+  .form-label {
+    color: #ecf0f1;
+  }
+  
+  .form-input {
+    background: rgba(52, 73, 94, 0.8);
+    border-color: #34495e;
+    color: #ecf0f1;
+  }
+  
+  .form-input::placeholder {
+    color: #7f8c8d;
+  }
+}
